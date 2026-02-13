@@ -4,12 +4,14 @@ const admin = require("firebase-admin");
 const app = express();
 app.use(express.json());
 
-// ✅ Load Firebase key from Render ENV
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+// ✅ Firebase Service Account from Render ENV (3 variables)
+const serviceAccount = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+};
 
-// 🔥 IMPORTANT FIX (Convert \\n to real line breaks)
-serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
-
+// Initialize Firebase
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -40,6 +42,6 @@ app.post("/sendPush", async (req, res) => {
   }
 });
 
-// Render uses PORT automatically
+// Render auto PORT
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Server running on port " + PORT));
