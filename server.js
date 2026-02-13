@@ -7,6 +7,9 @@ app.use(express.json());
 // ✅ Load Firebase key from Render ENV
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
+// 🔥 IMPORTANT FIX (Convert \\n to real line breaks)
+serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
