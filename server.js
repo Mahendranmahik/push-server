@@ -1,31 +1,42 @@
 const express = require("express");
 const admin = require("firebase-admin");
 
-const serviceAccount = require("./firebase-key.json");
+const app = express();
+app.use(express.json());
+
+// ✅ Load Firebase key from Render ENV
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-const app = express();
-app.use(express.json());
-
 // API endpoint
 app.post("/sendPush", async (req, res) => {
   const { token, title, body } = req.body;
 
+  if (!token) {
+    return res.status(400).send("FCM token missing");
+  }
+
   const message = {
-    notification: { title, body },
+    notification: {
+      title: title || "New Message",
+      body: body || "You received a message",
+    },
     token: token,
   };
 
   try {
-    await admin.messaging().send(message);
+    const response = await admin.messaging().send(message);
+    console.log("Push sent:", response);
     res.send("Push Sent Successfully");
   } catch (e) {
-    console.log(e);
+    console.error("Push Error:", e);
     res.status(500).send("Error sending push");
   }
 });
 
-app.listen(3000, () => console.log("Server running on port 3000"));
+// Render uses PORT automatically
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server running on port " + PORT));
